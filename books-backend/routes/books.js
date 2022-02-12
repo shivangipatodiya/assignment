@@ -1,5 +1,5 @@
-var express = require("express");
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
 
 /* GET books listing. */
 module.exports = (db) => {
@@ -17,58 +17,58 @@ module.exports = (db) => {
     try {
       const data = await db.query(
         `INSERT INTO books (name, author, publishing_year, isbn, image_url)
-      VALUES ($1,$2,$3,$4,$5)`,
+      VALUES ($1,$2,$3,$4,$5) RETURNING *;`,
         [
           req.body.name,
           req.body.author,
-          req.body.publishingYear,
+          req.body.publishing_year,
           req.body.isbn,
-          req.body.imageUrl
+          req.body.image_url
         ]
       );
 
-      res.status(200).send({ bookAdded: true });
+      res.status(200).send(data.rows[0]);
     } catch (e) {
-      res.status(500).send({ error: e.message });
+      res.status(400).send({ error: e.message });
     }
   });
 
   router.put("/", async (req, res) => {
     try {
-       await db.query(
+      const respp = await db.query(
         `UPDATE books SET name = $1, 
                         author = $2, 
-                        publishingYear = $3,
-                        isbn = $4 , 
-                        imageUrl = $5
-                    WHERE products.id = $6`,
+                        publishing_year = $3,
+                        isbn = $4, 
+                        image_url = $5
+                    WHERE id = $6;`,
         [
           req.body.name,
           req.body.author,
-          req.body.publishingYear,
+          req.body.publishing_year,
           req.body.isbn,
-          req.body.imageUrl,
+          req.body.image_url,
           req.body.id
         ]
       );
 
-      res.status(200).send( req.body );
+      res.status(200).send(req.body);
     } catch (e) {
-      res.status(500).send({ error: e.message });
+      res.status(400).send({ error: e.message });
     }
   });
 
-  router.delete("/", async (req, res) => {
+  router.delete("/:id", async (req, res) => {
     try {
-       await db.query(
+      await db.query(
         `DELETE FROM books
-          WHERE id = $1 `,
-        [req.body.id]
+          WHERE id = $1; `,
+        [req.params.id]
       );
 
       res.status(200).send({ bookDeleted: true });
     } catch (e) {
-      res.status(500).send({ error: e.message });
+      res.status(400).send({ error: e.message });
     }
   });
   return router;
